@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AI Resume Analyzer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #7b2ff7;
+            --primary-light: #9a5ff7;
+            --secondary: #f107a3;
+            --secondary-light: #f539b8;
+            --text: #2c2c2c;
+            --text-light: #5a5a5a;
+            --light-bg: #f8f9fa;
+            --lighter-bg: #ffffff;
+            --border: #e0e0e0;
+            --error: #e63946;
+            --success: #2a9d8f;
+            --warning: #ff9f1c;
+            --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #f5f7ff 0%, #f0f2ff 100%);
+            margin: 0;
+            padding: 20px;
+            color: var(--text);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 700px;
+            margin: 30px auto;
+            background: var(--lighter-bg);
+            border-radius: 16px;
+            box-shadow: var(--shadow);
+            padding: 40px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+
+        .container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 6px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+        }
+
+        h2 {
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 16px;
+            font-size: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }
+
+        .description {
+            color: var(--text-light);
+            margin-bottom: 32px;
+            font-size: 15px;
+            font-weight: 400;
+            max-width: 80%;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .form-section {
+            text-align: left;
+            margin-bottom: 25px;
+            background: var(--lighter-bg);
+            padding: 24px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+        }
+
+        .form-section h3 {
+            font-size: 18px;
+            margin-bottom: 20px;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 600;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            font-size: 14px;
+            color: var(--text);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 14px 16px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            font-size: 15px;
+            font-family: 'Inter', sans-serif;
+            transition: var(--transition);
+            background: var(--lighter-bg);
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(123, 47, 247, 0.1);
+        }
+
+        select.form-control {
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 14px center;
+            background-size: 16px;
+        }
+
+        .file-upload {
+            margin-bottom: 25px;
+            position: relative;
+        }
+
+        .file-upload input {
+            width: 0.1px;
+            height: 0.1px;
+            opacity: 0;
+            position: absolute;
+        }
+
+        .file-upload label {
+            display: block;
+            padding: 30px;
+            background: var(--light-bg);
+            border: 2px dashed var(--border);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: var(--transition);
+            font-weight: 500;
+            text-align: center;
+        }
+
+        .file-upload label:hover {
+            border-color: var(--primary);
+            background: rgba(123, 47, 247, 0.05);
+            transform: translateY(-2px);
+        }
+
+        .file-upload .file-icon {
+            font-size: 36px;
+            margin-bottom: 12px;
+            color: var(--primary);
+        }
+
+        .file-upload .file-name {
+            margin-top: 12px;
+            font-size: 14px;
+            color: var(--text-light);
+            word-break: break-all;
+        }
+
+        .file-size-warning {
+            color: var(--error);
+            font-size: 13px;
+            margin-top: 8px;
+            display: none;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        #formError {
+            color: var(--error);
+            background: rgba(230, 57, 70, 0.1);
+            padding: 14px;
+            border-radius: 10px;
+            margin-bottom: 24px;
+            font-size: 14px;
+            display: none;
+            text-align: left;
+            border-left: 4px solid var(--error);
+        }
+
+        .btn {
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 16px 32px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            box-shadow: 0 4px 15px rgba(123, 47, 247, 0.3);
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(123, 47, 247, 0.4);
+            background: linear-gradient(90deg, var(--primary-light), var(--secondary-light));
+        }
+
+        .btn:disabled {
+            background: #d1d5db;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .progress-container {
+            width: 100%;
+            height: 8px;
+            background: var(--light-bg);
+            border-radius: 4px;
+            margin: 20px 0;
+            overflow: hidden;
+            display: none;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            width: 0%;
+            transition: width 0.4s ease;
+        }
+
+        .status {
+            margin: 20px 0;
+            padding: 16px 20px;
+            border-radius: 10px;
+            display: none;
+            text-align: left;
+            font-size: 15px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .status.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        .status i {
+            font-size: 20px;
+        }
+
+        .uploading {
+            background: rgba(25, 118, 210, 0.1);
+            color: #1976d2;
+            border-left: 4px solid #1976d2;
+        }
+
+        .analyzing {
+            background: rgba(255, 143, 0, 0.1);
+            color: #ff8f00;
+            border-left: 4px solid #ff8f00;
+        }
+
+        .error {
+            background: rgba(230, 57, 70, 0.1);
+            color: var(--error);
+            border-left: 4px solid var(--error);
+        }
+.result {
+    margin-top: 30px;
+    background: var(--lighter-bg);
+    border-radius: 12px;
+    padding: 28px;
+    text-align: left;
+    font-size: 15px;
+    line-height: 1.7;
+    display: none;
+    border: 1px solid var(--border);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+}
+
+.result h3 {
+    color: var(--primary);
+    margin-top: 0;
+    margin-bottom: 20px;
+    font-size: 22px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.result-content {
+    white-space: pre-wrap;
+}
+
+.result-section {
+    margin-bottom: 28px;
+}
+
+.result-section h4 {
+    color: var(--text);
+    margin-bottom: 12px;
+    font-size: 17px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.result-section p {
+    color: var(--text-light);
+    margin-left: 24px;
+    margin-bottom: 10px;
+}
+
+.result-section strong {
+    font-weight: 600;
+    color: var(--text);
+}
+
+.result-section ul,
+.result-section ol {
+    margin-left: 40px;
+    margin-bottom: 16px;
+    padding-left: 0;
+    color: var(--text-light);
+}
+
+.result-section ul li,
+.result-section ol li {
+    margin-bottom: 8px;
+    line-height: 1.6;
+}
+
+.result-section ul {
+    list-style-type: disc;
+}
+
+.result-section ol {
+    list-style-type: decimal;
+}
+
+        .hidden {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+                margin: 20px;
+            }
+
+            h2 {
+                font-size: 22px;
+                flex-direction: column;
+                gap: 8px;
+                text-align: center;
+            }
+
+            .form-section {
+                padding: 16px;
+            }
+
+            .description {
+                font-size: 14px;
+                line-height: 1.5;
+                margin-bottom: 24px;
+            }
+
+            .btn {
+                font-size: 15px;
+                padding: 14px;
+            }
+
+            .file-upload label {
+                padding: 20px;
+                font-size: 14px;
+            }
+
+            .file-upload .file-icon {
+                font-size: 28px;
+            }
+
+            .form-group label,
+            .form-control {
+                font-size: 14px;
+            }
+
+            .result {
+                padding: 20px;
+                font-size: 14px;
+            }
+
+            .result h3 {
+                font-size: 18px;
+            }
+
+            .result-section h4 {
+                font-size: 16px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                margin: 10px;
+                padding: 16px;
+            }
+
+            .btn {
+                font-size: 14px;
+                padding: 12px;
+            }
+
+            .form-control {
+                padding: 10px 12px;
+            }
+
+            .file-upload label {
+                padding: 16px;
+            }
+
+            h2 {
+                font-size: 20px;
+            }
+
+            .status {
+                font-size: 14px;
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .demo-box {
+                height: 70px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h2><i class="fas fa-robot"></i> AI Resume Analyzer</h2>
+        <p class="description">Get personalized feedback on your resume tailored to your career goals and background</p>
+
+        <div id="formError"></div>
+
+        <div class="form-section">
+            <h3><i class="fas fa-user-graduate"></i> Personal Information</h3>
+            <div class="form-group">
+                <label for="age">Age</label>
+                <input type="number" id="age" class="form-control" placeholder="Enter your age" min="16" max="70"
+                    required>
+            </div>
+
+            <div class="form-group">
+                <label for="course">Current/Most Recent Course</label>
+                <select id="course" class="form-control" required>
+                    <option value="">-- Select Course --</option>
+                    <option value="B.Tech">B.Tech</option>
+                    <option value="M.Tech">M.Tech</option>
+                    <option value="MBA">MBA</option>
+                    <option value="BSc">BSc</option>
+                    <option value="MSc">MSc</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+
+            <div id="specializationBox" class="form-group hidden">
+                <label for="specialization">Specialization</label>
+                <select id="specialization" class="form-control">
+                    <option value="">-- Select Specialization --</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="goal">Career Goal</label>
+                <input type="text" id="goal" class="form-control"
+                    placeholder="e.g. AI Engineer, Product Manager, Data Scientist" required>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h3><i class="fas fa-file-upload"></i> Upload Resume</h3>
+            <div class="file-upload">
+                <input type="file" id="resumeInput" accept=".pdf,.doc,.docx" />
+                <label for="resumeInput">
+                    <div class="file-icon"><i class="fas fa-cloud-upload-alt"></i></div>
+                    <div>Choose PDF/DOCX Resume or Drag & Drop</div>
+                    <div class="file-name" id="fileName"></div>
+                </label>
+                <div class="file-size-warning" id="fileSizeWarning">
+                    <i class="fas fa-exclamation-triangle"></i> File size exceeds 5MB limit
+                </div>
+            </div>
+        </div>
+
+        <div class="progress-container" id="progressContainer">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+
+        <div class="status uploading" id="uploadStatus">
+            <i class="fas fa-spinner fa-spin"></i> Uploading your resume...
+        </div>
+
+        <div class="status analyzing" id="analyzeStatus">
+            <i class="fas fa-spinner fa-spin"></i> Analyzing resume content...
+        </div>
+
+        <div class="status error" id="errorStatus">
+            <i class="fas fa-exclamation-circle"></i> <span id="errorMessage"></span>
+        </div>
+
+        <button class="btn" id="analyzeBtn" disabled>
+            <i class="fas fa-magic"></i> Analyze Resume
+        </button>
+
+        <div class="result" id="resultBox">
+            <h3><i class="fas fa-chart-bar"></i> Analysis Results</h3>
+            <div class="result-content" id="resultContent"></div>
+        </div>
+
+
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // DOM Elements
+            const fileInput = document.getElementById('resumeInput');
+            const fileName = document.getElementById('fileName');
+            const fileSizeWarning = document.getElementById('fileSizeWarning');
+            const analyzeBtn = document.getElementById('analyzeBtn');
+            const uploadStatus = document.getElementById('uploadStatus');
+            const analyzeStatus = document.getElementById('analyzeStatus');
+            const errorStatus = document.getElementById('errorStatus');
+            const errorMessage = document.getElementById('errorMessage');
+            const progressContainer = document.getElementById('progressContainer');
+            const progressBar = document.getElementById('progressBar');
+            const resultBox = document.getElementById('resultBox');
+            const resultContent = document.getElementById('resultContent');
+            const formError = document.getElementById('formError');
+            const specializationBox = document.getElementById('specializationBox');
+            const specialization = document.getElementById('specialization');
+
+            // Course change handler
+            document.getElementById('course').addEventListener('change', function () {
+                const selected = this.value;
+                specialization.innerHTML = '<option value="">-- Select Specialization --</option>';
+
+                if (selected === "B.Tech") {
+                    specialization.innerHTML += `
+                        <option value="AI">Artificial Intelligence</option>
+                        <option value="CSE">Computer Science</option>
+                        <option value="ECE">Electronics</option>
+                        <option value="ME">Mechanical</option>
+                        <option value="CE">Civil</option>
+                    `;
+                } else if (selected === "M.Tech") {
+                    specialization.innerHTML += `
+                        <option value="Data Science">Data Science</option>
+                        <option value="Machine Learning">Machine Learning</option>
+                        <option value="Cyber Security">Cyber Security</option>
+                    `;
+                } else if (selected === "MBA") {
+                    specialization.innerHTML += `
+                        <option value="Marketing">Marketing</option>
+                        <option value="Finance">Finance</option>
+                        <option value="HR">Human Resources</option>
+                        <option value="Operations">Operations</option>
+                    `;
+                } else if (selected === "BSc") {
+                    specialization.innerHTML += `
+                        <option value="Computer Science">Computer Science</option>
+                        <option value="Mathematics">Mathematics</option>
+                        <option value="Physics">Physics</option>
+                    `;
+                } else if (selected === "MSc") {
+                    specialization.innerHTML += `
+                        <option value="Data Science">Data Science</option>
+                        <option value="Statistics">Statistics</option>
+                        <option value="Biotechnology">Biotechnology</option>
+                    `;
+                }
+
+                specializationBox.classList.toggle('hidden', !selected || selected === "Other");
+                validateForm();
+            });
+
+            // File input change handler
+            fileInput.addEventListener('change', function (e) {
+                const file = e.target.files[0];
+                formError.style.display = 'none';
+
+                if (file) {
+                    // Check file size (5MB limit)
+                    if (file.size > 5 * 1024 * 1024) {
+                        fileSizeWarning.style.display = 'block';
+                        analyzeBtn.disabled = true;
+                        fileName.textContent = '';
+                    } else {
+                        fileSizeWarning.style.display = 'none';
+                        fileName.textContent = `Selected: ${file.name} (${formatFileSize(file.size)})`;
+                        validateForm();
+                    }
+                }
+            });
+
+            // Form validation
+            function validateForm() {
+                const age = document.getElementById('age').value.trim();
+                const course = document.getElementById('course').value.trim();
+                const spec = document.getElementById('specialization').value.trim();
+                const goal = document.getElementById('goal').value.trim();
+                const file = fileInput.files[0];
+
+                // Basic validation
+                if (!age || !course || !goal || (!specializationBox.classList.contains('hidden') && !spec) || !file) {
+                    analyzeBtn.disabled = true;
+                    return false;
+                }
+
+                // Age validation
+                const ageNum = parseInt(age);
+                if (isNaN(ageNum) || ageNum < 16 || ageNum > 70) {
+                    analyzeBtn.disabled = true;
+                    return false;
+                }
+
+                analyzeBtn.disabled = false;
+                return true;
+            }
+
+            // Input validation on change
+            document.getElementById('age').addEventListener('input', validateForm);
+            document.getElementById('goal').addEventListener('input', validateForm);
+            document.getElementById('specialization').addEventListener('change', validateForm);
+
+            // Analyze button click handler
+            analyzeBtn.addEventListener('click', function () {
+                const file = fileInput.files[0];
+                const age = document.getElementById('age').value.trim();
+                const course = document.getElementById('course').value.trim();
+                const spec = document.getElementById('specialization').value.trim();
+                const goal = document.getElementById('goal').value.trim();
+
+                // Validate fields
+                if (!validateForm()) {
+                    formError.textContent = "⚠ Please fill out all required fields correctly";
+                    formError.style.display = "block";
+                    return;
+                }
+
+                // Age validation
+                const ageNum = parseInt(age);
+                if (isNaN(ageNum) || ageNum < 16 || ageNum > 70) {
+                    formError.textContent = "⚠ Please enter a valid age between 16 and 70";
+                    formError.style.display = "block";
+                    return;
+                }
+
+                // Reset UI
+                resetUI();
+                setStatus(uploadStatus);
+                progressContainer.style.display = 'block';
+
+                // Start upload and analysis
+                uploadAndAnalyze(file, age, course, spec, goal);
+            });
+
+            // Download button click handler
+
+            // Global variable to store the analysis result
+            let analysisResult = '';
+
+            // Upload and analyze function
+            function uploadAndAnalyze(file, age, course, spec, goal) {
+                const reader = new FileReader();
+
+                reader.onloadstart = function () {
+                    resetUI();
+                    setStatus(uploadStatus);
+                    progressContainer.style.display = 'block';
+                };
+
+                reader.onprogress = function (e) {
+                    if (e.lengthComputable) {
+                        const percent = Math.round((e.loaded / e.total) * 100);
+                        progressBar.style.width = percent + '%';
+                    }
+                };
+
+                reader.onloadend = function () {
+                    const base64Data = reader.result.split(',')[1];
+                    setStatus(analyzeStatus);
+
+                    fetch("https://resumemongodbtest.onrender.com/evaluate", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                        body: `base64_pdf=${encodeURIComponent(base64Data)}&age=${encodeURIComponent(age)}&course=${encodeURIComponent(course)}&specialization=${encodeURIComponent(spec)}&career_goal=${encodeURIComponent(goal)}`
+                    })
+                        .then(async res => {
+                            if (!res.ok) {
+                                const error = await res.json();
+                                throw new Error(error.error || 'Server error');
+                            }
+                            return res.json();
+                        })
+                        .then(data => {
+                            progressContainer.style.display = 'none';
+                            setStatus(null);
+
+                            if (data.error) {
+                                showError(data.error);
+                            } else {
+                                displayResults(data.response);
+                            }
+                        })
+                        .catch(err => {
+                            progressContainer.style.display = 'none';
+                            showError(err.message);
+                        });
+                };
+
+                reader.onerror = function () {
+                    showError('Failed to read file');
+                };
+
+                reader.readAsDataURL(file);
+            }
+
+            // Display results
+            function displayResults(result) {
+                analysisResult = result || "No analysis available.";
+
+                // Format the result with HTML
+                const formattedResult = formatAnalysisResult(analysisResult);
+                resultContent.innerHTML = formattedResult;
+                resultBox.style.display = 'block';
+
+                // Scroll to results
+                resultBox.scrollIntoView({ behavior: 'smooth' });
+            }
+
+            // Format analysis result with HTML
+           function formatAnalysisResult(text) {
+    // Escape HTML special characters to prevent injection
+    text = text.replace(/[&<>]/g, tag => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;'
+    }[tag]));
+
+    // Split text into lines for better control
+    const lines = text.split('\n');
+    let html = '';
+    let inOrderedList = false;
+    let inUnorderedList = false;
+
+    for (let line of lines) {
+        line = line.trim();
+
+        // Convert bold markers
+        line = line.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+
+        // Header line like "1. Resume Analysis:"
+        if (/^\d+\.\s+.*?:$/.test(line)) {
+            // Close any open lists
+            if (inOrderedList) { html += '</ol>'; inOrderedList = false; }
+            if (inUnorderedList) { html += '</ul>'; inUnorderedList = false; }
+
+            html += `<h4>${line}</h4>`;
+        }
+
+        // Ordered list item (e.g., "1. Some insight")
+        else if (/^\d+\.\s+/.test(line)) {
+            if (!inOrderedList) {
+                if (inUnorderedList) { html += '</ul>'; inUnorderedList = false; }
+                html += '<ol>';
+                inOrderedList = true;
+            }
+            const content = line.replace(/^\d+\.\s+/, '');
+            html += `<li>${content}</li>`;
+        }
+
+        // Unordered list item (e.g., "* Focus on impact")
+        else if (/^\*\s+/.test(line)) {
+            if (!inUnorderedList) {
+                if (inOrderedList) { html += '</ol>'; inOrderedList = false; }
+                html += '<ul>';
+                inUnorderedList = true;
+            }
+            const content = line.replace(/^\*\s+/, '');
+            html += `<li>${content}</li>`;
+        }
+
+        // Regular paragraph
+        else if (line !== '') {
+            if (inOrderedList) { html += '</ol>'; inOrderedList = false; }
+            if (inUnorderedList) { html += '</ul>'; inUnorderedList = false; }
+
+            html += `<p>${line}</p>`;
+        }
+    }
+
+    // Close any unclosed lists
+    if (inOrderedList) html += '</ol>';
+    if (inUnorderedList) html += '</ul>';
+
+    // Wrap in main container
+    return `<div class="result-section">${html}</div>`;
+}
+
+
+            // Helper functions
+            function resetUI() {
+                setStatus(null);
+                errorStatus.style.display = 'none';
+                resultBox.style.display = 'none';
+                progressBar.style.width = '0%';
+                formError.style.display = 'none';
+            }
+
+            function setStatus(activeElement) {
+                // Hide all status elements
+                [uploadStatus, analyzeStatus, errorStatus].forEach(el => {
+                    el.classList.remove('active');
+                });
+
+                // Show the active one if provided
+                if (activeElement) {
+                    activeElement.classList.add('active');
+                }
+            }
+
+            function showError(message) {
+                errorMessage.textContent = message;
+                setStatus(errorStatus);
+                formError.style.display = 'none';
+            }
+
+            function formatFileSize(bytes) {
+                const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+                if (bytes === 0) return '0 Bytes';
+                const i = parseInt(Math.floor(Math.log(bytes) / Math.log(1024)));
+                return Math.round(bytes / Math.pow(1024, i), 2) + ' ' + sizes[i];
+            }
+        });
+    </script>
+</body>
+
+</html>
